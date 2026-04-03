@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard - Disha</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #faf7f2;
+            --surf:        #ffffff;
+            --surf-2:      #f4f0e8;
+            --border:      #e5ddd0;
+            --border-hi:   #c9a96e;
+            --acc:         #b5813a;
+            --acc-soft:    #f5e6c8;
+            --acc-deep:    #8a5e1e;
+            --acc-glow:    rgba(181,129,58,0.18);
+            --rose:        #d4a574;
+            --rose-soft:   #fdf5ec;
+            --sage:        #a8b89a;
+            --sage-soft:   #f0f4ed;
+            --txt-1:       #1c1610;
+            --txt-2:       #5a4e3a;
+            --txt-3:       #9e8e75;
+            --font-head:   'Cormorant Garamond', serif;
+            --font-body:   'Nunito', sans-serif;
+            --radius:      18px;
+            --radius-sm:   12px;
+            --radius-xs:   8px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg); font-family: var(--font-body);
+            color: var(--txt-1); min-height: 100vh; line-height: 1.65;
+            background-image:
+                radial-gradient(ellipse 80% 55% at 10% 0%,  rgba(201,169,110,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 45% at 90% 5%,  rgba(212,165,116,0.12) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 50% 100%, rgba(168,184,154,0.10) 0%, transparent 55%);
+        }
+
+        /* ── NAVBAR ── */
+        .sp-nav {
+            position: sticky; top: 0; z-index: 200;
+            background: rgba(250,247,242,0.88); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+            border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 36px; height: 62px;
+        }
+        .sp-brand {
+            display: flex; align-items: center; gap: 11px;
+            font-family: var(--font-head); font-size: 22px; font-weight: 600;
+            font-style: italic; color: var(--txt-1); text-decoration: none;
+        }
+        .sp-brand-blossom {
+            width: 32px; height: 32px; position: relative;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .sp-brand-blossom::before,
+        .sp-brand-blossom::after {
+            content: ''; position: absolute; width: 14px; height: 14px; border-radius: 50%;
+            background: linear-gradient(135deg, #c9a96e, var(--rose));
+        }
+        .sp-brand-blossom::before { top: 2px; left: 2px; opacity: 0.8; }
+        .sp-brand-blossom::after  { bottom: 2px; right: 2px; opacity: 0.6; }
+        .sp-brand-blossom span { position: relative; z-index: 1; font-size: 15px; line-height: 1; }
+
+        .sp-nav-right { display: flex; align-items: center; gap: 10px; }
+        .sp-chip {
+            display: flex; align-items: center; gap: 8px;
+            background: var(--surf); border: 1px solid var(--border);
+            border-radius: 40px; padding: 5px 16px 5px 7px;
+            font-size: 13px; font-weight: 600; color: var(--txt-2);
+        }
+        .sp-chip-avatar {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, #c9a96e, var(--rose));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; color: #fff;
+        }
+        .sp-logout {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 15px; border-radius: var(--radius-xs);
+            border: 1px solid rgba(212,165,116,0.35);
+            background: var(--rose-soft); color: #8c3a1c;
+            font-family: var(--font-body); font-size: 13px; font-weight: 600;
+            text-decoration: none; transition: background 0.2s, border-color 0.2s;
+        }
+        .sp-logout:hover { background: #fce5d0; border-color: rgba(212,165,116,0.6); color: #6b2010; }
+
+        /* ── LAYOUT ── */
+        .sp-wrap { max-width: 680px; margin: 0 auto; padding: 38px 20px 80px; }
+
+        /* ── ALERT ── */
+        .alert-danger {
+            background: var(--rose-soft); border: 1px solid rgba(212,165,116,0.4);
+            border-radius: var(--radius-xs); color: #8c3a1c;
+            padding: 12px 16px; font-size: 14px; margin-bottom: 20px; font-weight: 600;
+        }
+
+        /* ── SEARCH ROW ── */
+        .sp-search-row {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--surf); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 10px 12px; margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(181,129,58,0.08);
+        }
+        .sp-input-wrap { position: relative; flex: 1; }
+        .sp-input-wrap .ico {
+            position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+            color: var(--txt-3); font-size: 14px; pointer-events: none;
+        }
+        .form-control {
+            width: 100%; background: var(--surf-2); border: 1px solid var(--border);
+            border-radius: var(--radius-xs); color: var(--txt-1);
+            font-family: var(--font-body); font-size: 14px; font-weight: 500;
+            padding: 9px 12px 9px 35px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-control::placeholder { color: var(--txt-3); font-weight: 400; }
+        .form-control:focus {
+            outline: none; border-color: var(--acc);
+            box-shadow: 0 0 0 3px var(--acc-glow);
+            background: var(--surf); color: var(--txt-1);
+        }
+        .sp-btn-load {
+            flex-shrink: 0; display: flex; align-items: center; gap: 7px;
+            background: linear-gradient(135deg, #c9a96e, #b5813a);
+            border: none; border-radius: var(--radius-xs);
+            color: #fff; font-family: var(--font-body); font-size: 13px; font-weight: 700;
+            padding: 9px 20px; cursor: pointer; letter-spacing: 0.2px;
+            box-shadow: 0 3px 14px rgba(181,129,58,0.30);
+            transition: opacity 0.2s, transform 0.15s;
+        }
+        .sp-btn-load:hover { opacity: 0.92; transform: translateY(-1px); }
+        .sp-btn-load:active { transform: none; }
+
+        /* ── TABS ── */
+        .sp-tabs {
+            display: inline-flex; background: var(--surf);
+            border: 1px solid var(--border); border-radius: 40px;
+            padding: 4px; gap: 3px; margin-bottom: 28px;
+            box-shadow: 0 2px 10px rgba(181,129,58,0.07);
+        }
+        .toggle-btn {
+            display: flex; align-items: center; gap: 7px;
+            background: transparent; border: none; border-radius: 30px;
+            font-family: var(--font-body); font-size: 13px; font-weight: 600;
+            color: var(--txt-3); padding: 8px 20px; cursor: pointer;
+            transition: color 0.2s, background 0.2s;
+        }
+        .toggle-btn:hover { color: var(--txt-2); background: var(--surf-2); }
+        .toggle-btn.active-btn {
+            background: linear-gradient(135deg, #c9a96e, #b5813a);
+            color: #fff; box-shadow: 0 2px 10px rgba(181,129,58,0.28);
+        }
+
+        /* ── SECTION HEADING ── */
+        .sp-sect-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+        .sp-sect-title {
+            font-family: var(--font-head); font-size: 20px; font-weight: 600;
+            font-style: italic; color: var(--txt-1);
+        }
+        .sp-badge {
+            font-size: 10px; font-weight: 700; letter-spacing: 0.8px;
+            text-transform: uppercase; background: var(--acc-soft);
+            border-radius: 20px; padding: 3px 11px; color: var(--acc-deep);
+            border: 1px solid var(--border-hi);
+        }
+        .sp-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 4px 0 20px;
+        }
+
+        /* ── CARD BOX ── */
+        .card-box {
+            background: var(--surf); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 20px 22px; margin-bottom: 14px;
+            position: relative; overflow: hidden;
+            box-shadow: 0 2px 12px rgba(181,129,58,0.07);
+            transition: border-color 0.25s, transform 0.25s, box-shadow 0.25s;
+            animation: fadeUp 0.38s ease both;
+        }
+        .card-box::after {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, #c9a96e, #d4a574, #a8b89a);
+            border-radius: var(--radius) var(--radius) 0 0;
+            opacity: 0; transition: opacity 0.25s;
+        }
+        .card-box:hover {
+            border-color: var(--border-hi); transform: translateY(-2px);
+            box-shadow: 0 8px 28px rgba(181,129,58,0.14);
+        }
+        .card-box:hover::after { opacity: 1; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .card-box:nth-child(1){animation-delay:0.05s}
+        .card-box:nth-child(2){animation-delay:0.10s}
+        .card-box:nth-child(3){animation-delay:0.15s}
+
+        .cb-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+        .cb-user { font-family: var(--font-body); font-size: 14px; font-weight: 700; color: var(--txt-1); }
+        .meta { font-size: 11px; color: var(--txt-3); font-weight: 500; }
+
+        .cb-fields { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .cb-field {
+            background: var(--surf-2); border-radius: var(--radius-xs);
+            padding: 9px 13px; border: 1px solid var(--border);
+        }
+        .field-label {
+            font-size: 10px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.8px; color: var(--txt-3); display: block;
+        }
+        .field-val { font-size: 14px; font-weight: 700; color: var(--txt-1); margin-top: 3px; }
+
+        /* ── GROUP CARD ── */
+        .group-card {
+            background: var(--surf); border: 1px solid var(--border);
+            border-radius: var(--radius); padding: 26px; margin-bottom: 14px;
+            box-shadow: 0 2px 12px rgba(181,129,58,0.07);
+        }
+        .group-header {
+            display: flex; align-items: center; gap: 16px; margin-bottom: 22px;
+            padding-bottom: 18px; border-bottom: 1px solid var(--border);
+        }
+        .group-icon {
+            width: 50px; height: 50px; border-radius: 16px;
+            background: var(--acc-soft); border: 1px solid var(--border-hi);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: var(--acc); flex-shrink: 0;
+        }
+        .group-name {
+            font-family: var(--font-head); font-size: 20px; font-weight: 600;
+            font-style: italic; color: var(--txt-1);
+        }
+        .group-id { font-size: 12px; color: var(--txt-3); margin-top: 3px; font-weight: 500; }
+        .group-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* ── EMPTY ── */
+        .sp-empty {
+            text-align: center; padding: 70px 24px;
+            display: flex; flex-direction: column; align-items: center; gap: 16px;
+        }
+        .sp-empty-icon {
+            width: 64px; height: 64px; border-radius: 20px;
+            background: var(--acc-soft); border: 1px solid var(--border-hi);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 28px; color: var(--acc);
+        }
+        .sp-empty h3 {
+            font-family: var(--font-head); font-size: 20px; font-weight: 600;
+            font-style: italic; color: var(--txt-2);
+        }
+        .sp-empty p { font-size: 13px; color: var(--txt-3); font-weight: 500; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 580px) {
+            .sp-nav { padding: 0 18px; }
+            .sp-wrap { padding: 24px 14px 60px; }
+            .sp-search-row { flex-wrap: wrap; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="sp-nav">
+    <a href="#" class="sp-brand">
+        <div class="sp-brand-blossom"><span>✦</span></div>
+        Social Platform
+    </a>
+    <div class="sp-nav-right">
+        <div class="sp-chip">
+            <div class="sp-chip-avatar">D</div>
+            Disha
+        </div>
+        <a href="/logout" class="sp-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
+    </div>
+</nav>
+
+<div class="sp-wrap">
+
+    <div class="sp-tabs">
+        <button id="likesBtn" class="toggle-btn active-btn" onclick="showSection('likes')">
+            <i class="bi bi-hand-thumbs-up"></i> Users Who Liked a Post
+        </button>
+        <button id="groupBtn" class="toggle-btn" onclick="showSection('group')">
+            <i class="bi bi-people-fill"></i> Group Info
+        </button>
+    </div>
+
+    <div class="sp-search-row">
+        <div class="sp-input-wrap">
+            <i class="bi bi-hash ico"></i>
+            <input type="number" id="primaryId" class="form-control"
+                   placeholder="Enter Post ID" th:value="${enteredId}">
+        </div>
+        <button class="sp-btn-load" onclick="loadData()">
+            <i class="bi bi-sparkle"></i> Load
+        </button>
+    </div>
+
+    <div th:if="${error}" class="alert-danger" th:text="${error}"></div>
+
+    <!-- LIKES -->
+    <div id="likesSection">
+        <div class="sp-sect-head">
+            <span class="sp-sect-title">Users Who Liked This Post</span>
+            <span class="sp-badge">Likes</span>
+        </div>
+        <div class="sp-divider"></div>
+
+        <div th:if="${#lists.isEmpty(likesList)}" class="sp-empty">
+            <div class="sp-empty-icon"><i class="bi bi-heart"></i></div>
+            <h3>No likes yet</h3>
+            <p>No likes data found for this post.</p>
+        </div>
+
+        <div th:each="like : ${likesList}" class="card-box">
+            <div class="cb-row">
+                <span class="cb-user" th:text="${like.username}"></span>
+                <span class="meta" th:text="${like.timestamp}"></span>
+            </div>
+            <div class="cb-fields">
+                <div class="cb-field">
+                    <span class="field-label">Like ID</span>
+                    <div class="field-val" th:text="${like.likeID}"></div>
+                </div>
+                <div class="cb-field">
+                    <span class="field-label">User ID</span>
+                    <div class="field-val" th:text="${like.userID}"></div>
+                </div>
+                <div class="cb-field">
+                    <span class="field-label">Post ID</span>
+                    <div class="field-val" th:text="${like.postID}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- GROUP -->
+    <div id="groupSection" class="hidden">
+        <div class="sp-sect-head">
+            <span class="sp-sect-title">Group Info</span>
+            <span class="sp-badge">Group</span>
+        </div>
+        <div class="sp-divider"></div>
+
+        <div th:if="${groupInfo == null}" class="sp-empty">
+            <div class="sp-empty-icon"><i class="bi bi-people"></i></div>
+            <h3>No group found</h3>
+            <p>No group info found for this ID.</p>
+        </div>
+
+        <div th:if="${groupInfo != null}" class="group-card">
+            <div class="group-header">
+                <div class="group-icon"><i class="bi bi-people-fill"></i></div>
+                <div>
+                    <div class="group-name" th:text="${groupInfo.groupName}"></div>
+                    <div class="group-id">Group ID: <span th:text="${groupInfo.groupID}"></span></div>
+                </div>
+            </div>
+            <div class="group-fields">
+                <div class="cb-field">
+                    <span class="field-label">Admin ID</span>
+                    <div class="field-val" th:text="${groupInfo.adminID}"></div>
+                </div>
+                <div class="cb-field">
+                    <span class="field-label">Admin Username</span>
+                    <div class="field-val" th:text="${groupInfo.adminUsername}"></div>
+                </div>
+                <div class="cb-field" style="grid-column: span 2;">
+                    <span class="field-label">Admin Email</span>
+                    <div class="field-val" th:text="${groupInfo.adminEmail}"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let currentSection = 'likes';
+
+    function showSection(type) {
+        currentSection = type;
+        document.getElementById("likesSection").classList.add("hidden");
+        document.getElementById("groupSection").classList.add("hidden");
+        document.getElementById("likesBtn").classList.remove("active-btn");
+        document.getElementById("groupBtn").classList.remove("active-btn");
+        document.getElementById(type + "Section").classList.remove("hidden");
+        document.getElementById(type + "Btn").classList.add("active-btn");
+        const input = document.getElementById("primaryId");
+        if (type === 'likes') { input.placeholder = "Enter Post ID"; }
+        else { input.placeholder = "Enter Group ID"; }
+    }
+
+    function loadData() {
+        const id = document.getElementById("primaryId").value;
+        if (!id) { alert("Please enter the required ID"); return; }
+        if (currentSection === 'likes') {
+            window.location.href = "/dashboard/disha?id=" + id + "&view=likes";
+        } else {
+            window.location.href = "/dashboard/disha?id=" + id + "&view=group";
+        }
+    }
+
+    window.onload = function () {
+        const params = new URLSearchParams(window.location.search);
+        const view = params.get("view");
+        if (view === "group") { showSection("group"); } else { showSection("likes"); }
+    };
+</script>
+</body>
+</html>

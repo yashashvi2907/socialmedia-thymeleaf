@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login — Social Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Nunito:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:          #faf7f2;
+            --surf:        #ffffff;
+            --surf-2:      #f4f0e8;
+            --border:      #e5ddd0;
+            --border-hi:   #c9a96e;
+            --acc:         #b5813a;
+            --acc-soft:    #f5e6c8;
+            --acc-deep:    #8a5e1e;
+            --acc-glow:    rgba(181,129,58,0.18);
+            --rose:        #d4a574;
+            --rose-soft:   #fdf5ec;
+            --sage:        #a8b89a;
+            --sage-soft:   #f0f4ed;
+            --txt-1:       #1c1610;
+            --txt-2:       #5a4e3a;
+            --txt-3:       #9e8e75;
+            --red-soft:    #e88a70;
+            --font-head:   'Cormorant Garamond', serif;
+            --font-body:   'Nunito', sans-serif;
+            --radius:      18px;
+            --radius-sm:   12px;
+            --radius-xs:   8px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            background: var(--bg);
+            font-family: var(--font-body);
+            color: var(--txt-1);
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 24px;
+            background-image:
+                radial-gradient(ellipse 80% 55% at 10% 0%,  rgba(201,169,110,0.18) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 45% at 90% 5%,  rgba(212,165,116,0.12) 0%, transparent 55%),
+                radial-gradient(ellipse 50% 40% at 50% 100%, rgba(168,184,154,0.10) 0%, transparent 55%);
+        }
+
+        /* ── CARD ── */
+        .login-card {
+            background: var(--surf);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 48px 44px 44px;
+            width: 100%; max-width: 440px;
+            box-shadow: 0 4px 32px rgba(181,129,58,0.10), 0 1px 4px rgba(0,0,0,0.04);
+            animation: slideUp 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── BRAND ── */
+        .login-brand {
+            display: flex; align-items: center; gap: 12px;
+            margin-bottom: 36px;
+        }
+
+        .brand-blossom {
+            width: 36px; height: 36px; position: relative;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .brand-blossom::before,
+        .brand-blossom::after {
+            content: ''; position: absolute;
+            width: 16px; height: 16px; border-radius: 50%;
+            background: linear-gradient(135deg, #c9a96e, var(--rose));
+        }
+        .brand-blossom::before { top: 1px; left: 1px; opacity: 0.85; }
+        .brand-blossom::after  { bottom: 1px; right: 1px; opacity: 0.6; }
+        .brand-blossom span {
+            position: relative; z-index: 1; font-size: 16px; line-height: 1;
+        }
+
+        .brand-text {
+            font-family: var(--font-head);
+            font-size: 22px; font-weight: 600; font-style: italic;
+            color: var(--txt-1); letter-spacing: 0.1px;
+        }
+
+        /* ── DIVIDER ── */
+        .sp-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+            margin: 0 0 32px;
+        }
+
+        /* ── HEADING ── */
+        .login-heading {
+            font-family: var(--font-head);
+            font-size: 30px; font-weight: 600; font-style: italic;
+            color: var(--txt-1); line-height: 1.2; letter-spacing: -0.3px;
+            margin-bottom: 6px;
+        }
+        .login-subtext {
+            font-size: 14px; color: var(--txt-3); font-weight: 500;
+            margin-bottom: 28px;
+        }
+
+        /* ── FIELDS ── */
+        .field-group { margin-bottom: 18px; }
+
+        .field-label {
+            display: block;
+            font-size: 12px; font-weight: 700;
+            letter-spacing: 0.8px; text-transform: uppercase;
+            color: var(--txt-2); margin-bottom: 7px;
+        }
+
+        .field-wrap { position: relative; }
+
+        .field-ico {
+            position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+            color: var(--txt-3); font-size: 15px; pointer-events: none;
+        }
+
+        .field-input {
+            width: 100%;
+            background: var(--surf-2); border: 1px solid var(--border);
+            border-radius: var(--radius-xs); color: var(--txt-1);
+            font-family: var(--font-body); font-size: 14px; font-weight: 500;
+            padding: 11px 14px 11px 38px;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+        .field-input::placeholder { color: var(--txt-3); font-weight: 400; }
+        .field-input:focus {
+            outline: none; border-color: var(--acc);
+            box-shadow: 0 0 0 3px var(--acc-glow);
+            background: var(--surf); color: var(--txt-1);
+        }
+
+        /* toggle password */
+        .toggle-pass {
+            position: absolute; right: 13px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer;
+            color: var(--txt-3); font-size: 15px; padding: 0;
+            transition: color 0.18s;
+        }
+        .toggle-pass:hover { color: var(--txt-2); }
+
+        /* ── SUBMIT ── */
+        .btn-login {
+            width: 100%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            background: linear-gradient(135deg, #c9a96e, #b5813a);
+            border: none; border-radius: var(--radius-xs);
+            color: #fff; font-family: var(--font-body); font-size: 14px; font-weight: 700;
+            padding: 12px 20px; cursor: pointer; letter-spacing: 0.2px; margin-top: 24px;
+            box-shadow: 0 3px 14px rgba(181,129,58,0.30);
+            transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+        }
+        .btn-login:hover {
+            opacity: 0.92; transform: translateY(-1px);
+            box-shadow: 0 5px 20px rgba(181,129,58,0.38);
+        }
+        .btn-login:active { transform: none; }
+
+        /* ── ERROR ── */
+        .login-error {
+            display: flex; align-items: center; gap: 9px;
+            background: var(--rose-soft); border: 1px solid rgba(212,165,116,0.4);
+            border-radius: var(--radius-xs); color: #8c3a1c;
+            font-size: 13px; font-weight: 600; padding: 11px 15px; margin-top: 18px;
+        }
+
+        /* ── FOOTER ── */
+        .login-footer {
+            margin-top: 28px; padding-top: 20px;
+            border-top: 1px solid var(--border);
+            text-align: center; font-size: 12px; color: var(--txt-3); font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<div class="login-card">
+
+    <div class="login-brand">
+        <div class="brand-blossom"><span>✦</span></div>
+        <span class="brand-text">Social Platform</span>
+    </div>
+
+    <div class="sp-divider"></div>
+
+    <h1 class="login-heading">Welcome back ✦</h1>
+    <p class="login-subtext">Sign in to continue to your dashboard.</p>
+
+    <form method="post" th:action="@{/login}">
+
+        <div class="field-group">
+            <label class="field-label" for="username">Username</label>
+            <div class="field-wrap">
+                <i class="bi bi-person field-ico"></i>
+                <input class="field-input" id="username" name="username"
+                       type="text" placeholder="Enter your username"
+                       autocomplete="username"/>
+            </div>
+        </div>
+
+        <div class="field-group">
+            <label class="field-label" for="password">Password</label>
+            <div class="field-wrap">
+                <i class="bi bi-lock field-ico"></i>
+                <input class="field-input" id="password" name="password"
+                       type="password" placeholder="Enter your password"
+                       autocomplete="current-password"/>
+                <button type="button" class="toggle-pass" id="togglePass" aria-label="Toggle password">
+                    <i class="bi bi-eye" id="eyeIcon"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-login">
+            <i class="bi bi-arrow-right-circle"></i> Sign In
+        </button>
+
+        <div class="login-error" th:if="${error}">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+    </form>
+
+    <div class="login-footer">Secure login &nbsp;·&nbsp; Social Platform &copy; 2025</div>
+
+</div>
+
+<script>
+    document.getElementById('togglePass').addEventListener('click', function () {
+        const pass = document.getElementById('password');
+        const icon = document.getElementById('eyeIcon');
+        if (pass.type === 'password') {
+            pass.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            pass.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+</script>
+</body>
+</html>
