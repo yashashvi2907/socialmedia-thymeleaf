@@ -1,13 +1,11 @@
 package com.capg.frontend.controller;
 
 import jakarta.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-
 import org.springframework.web.client.RestTemplate;
 
 import com.capg.frontend.dto.FriendsDTO;
@@ -17,13 +15,57 @@ import com.capg.frontend.dto.MessageDTO;
 import com.capg.frontend.dto.NotificationDTO;
 import com.capg.frontend.dto.PostDto;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 
 @Controller
 public class DashboardController {
 
     @Autowired
     private RestTemplate restTemplate;
+
+    private HttpEntity<String> getAuthorizedEntity(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(token);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        return new HttpEntity<>(headers);
+    }
+
+    private String extractBackendMessage(Exception e) {
+        if (e instanceof org.springframework.web.client.HttpClientErrorException clientEx) {
+            String body = clientEx.getResponseBodyAsString();
+            return parseMessageFromJson(body);
+        }
+
+        if (e instanceof org.springframework.web.client.HttpServerErrorException serverEx) {
+            String body = serverEx.getResponseBodyAsString();
+            return parseMessageFromJson(body);
+        }
+
+        return null;
+    }
+
+    private String parseMessageFromJson(String body) {
+        if (body == null || body.isBlank()) {
+            return null;
+        }
+
+        int index = body.indexOf("\"message\"");
+        if (index == -1) {
+            return null;
+        }
+
+        int colon = body.indexOf(":", index);
+        int firstQuote = body.indexOf("\"", colon + 1);
+        int secondQuote = body.indexOf("\"", firstQuote + 1);
+
+        if (colon == -1 || firstQuote == -1 || secondQuote == -1) {
+            return null;
+        }
+
+        return body.substring(firstQuote + 1, secondQuote);
+    }
 
     @GetMapping("/dashboard/bhavya")
     public String bhavyaDashboard(
@@ -37,18 +79,13 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        // 👉 Default userId (only for first load)
         if (userId == null) {
-            userId = 4; // just default view (NOT mapping)
+            userId = 4;
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = getAuthorizedEntity(token);
 
         try {
-            // 🔥 FEED API (dynamic)
             ResponseEntity<PostDto[]> feedResponse =
                     restTemplate.exchange(
                             "http://localhost:8085/api/feed/" + userId,
@@ -57,7 +94,6 @@ public class DashboardController {
                             PostDto[].class
                     );
 
-            // 🔥 TRENDING API
             ResponseEntity<PostDto[]> trendingResponse =
                     restTemplate.exchange(
                             "http://localhost:8085/api/posts/trending",
@@ -66,16 +102,23 @@ public class DashboardController {
                             PostDto[].class
                     );
 
-            model.addAttribute("feedPosts", Arrays.asList(feedResponse.getBody()));
-            model.addAttribute("trendingPosts", Arrays.asList(trendingResponse.getBody()));
+            model.addAttribute("feedPosts",
+                    feedResponse.getBody() != null ? Arrays.asList(feedResponse.getBody()) : Collections.emptyList());
+            model.addAttribute("trendingPosts",
+                    trendingResponse.getBody() != null ? Arrays.asList(trendingResponse.getBody()) : Collections.emptyList());
             model.addAttribute("selectedUserId", userId);
 
         } catch (Exception e) {
-            model.addAttribute("error", "Error fetching data");
+            e.printStackTrace();
+            String backendMessage = extractBackendMessage(e);
+            if (backendMessage != null) {
+                model.addAttribute("error", backendMessage);
+            }
         }
 
         return "dashboard_bhavya";
     }
+
     @GetMapping("/dashboard/mansi")
     public String mansiDashboard(
             @RequestParam(required = false) Integer userId,
@@ -90,20 +133,18 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        model.addAttribute("pendingList", java.util.Collections.emptyList());
-        model.addAttribute("acceptedList", java.util.Collections.emptyList());
-        model.addAttribute("mutualList", java.util.Collections.emptyList());
+        model.addAttribute("pendingList", Collections.emptyList());
+        model.addAttribute("acceptedList", Collections.emptyList());
+        model.addAttribute("mutualList", Collections.emptyList());
 
         if (userId == null) {
             return "dashboard_mansi";
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = getAuthorizedEntity(token);
 
         try {
-            if ("pending".equals(view)) {
+            if ("pending".equalsIgnoreCase(view)) {
                 FriendsDTO[] pending = restTemplate.exchange(
                         "http://localhost:8085/friends/pending/" + userId,
                         HttpMethod.GET,
@@ -112,9 +153,9 @@ public class DashboardController {
                 ).getBody();
 
                 model.addAttribute("pendingList",
-                        pending != null ? Arrays.asList(pending) : java.util.Collections.emptyList());
+                        pending != null ? Arrays.asList(pending) : Collections.emptyList());
 
-            } else if ("accepted".equals(view)) {
+            } else if ("accepted".equalsIgnoreCase(view)) {
                 FriendsDTO[] accepted = restTemplate.exchange(
                         "http://localhost:8085/friends/accepted/" + userId,
                         HttpMethod.GET,
@@ -123,29 +164,33 @@ public class DashboardController {
                 ).getBody();
 
                 model.addAttribute("acceptedList",
-                        accepted != null ? Arrays.asList(accepted) : java.util.Collections.emptyList());
+                        accepted != null ? Arrays.asList(accepted) : Collections.emptyList());
 
-            } else if ("mutual".equals(view)) {
+            } else if ("mutual".equalsIgnoreCase(view)) {
                 if (userId2 != null) {
                     FriendsDTO[] mutual = restTemplate.exchange(
-                            "http://localhost:8085/friends/mutual/" + userId + "/" + userId2,
+                            "http://localhost:8085/friends/mutual?user1=" + userId + "&user2=" + userId2,
                             HttpMethod.GET,
                             entity,
                             FriendsDTO[].class
                     ).getBody();
 
                     model.addAttribute("mutualList",
-                            mutual != null ? Arrays.asList(mutual) : java.util.Collections.emptyList());
+                            mutual != null ? Arrays.asList(mutual) : Collections.emptyList());
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error fetching data from backend");
+            String backendMessage = extractBackendMessage(e);
+            if (backendMessage != null) {
+                model.addAttribute("error", backendMessage);
+            }
         }
 
         return "dashboard_mansi";
     }
+
     @GetMapping("/dashboard/yashashvi")
     public String yashashviDashboard(
             @RequestParam(required = false) Integer userId,
@@ -160,19 +205,17 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        model.addAttribute("userPosts", java.util.Collections.emptyList());
-        model.addAttribute("chatList", java.util.Collections.emptyList());
+        model.addAttribute("userPosts", Collections.emptyList());
+        model.addAttribute("chatList", Collections.emptyList());
 
         if (userId == null) {
             return "dashboard_yashashvi";
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = getAuthorizedEntity(token);
 
         try {
-            if ("posts".equals(view)) {
+            if ("posts".equalsIgnoreCase(view)) {
                 PostDto[] posts = restTemplate.exchange(
                         "http://localhost:8085/api/posts/user/" + userId,
                         HttpMethod.GET,
@@ -181,9 +224,9 @@ public class DashboardController {
                 ).getBody();
 
                 model.addAttribute("userPosts",
-                        posts != null ? Arrays.asList(posts) : java.util.Collections.emptyList());
+                        posts != null ? Arrays.asList(posts) : Collections.emptyList());
 
-            } else if ("chat".equals(view)) {
+            } else if ("chat".equalsIgnoreCase(view)) {
                 if (userId2 != null) {
                     MessageDTO[] chats = restTemplate.exchange(
                             "http://localhost:8085/messages/" + userId + "/" + userId2,
@@ -193,17 +236,21 @@ public class DashboardController {
                     ).getBody();
 
                     model.addAttribute("chatList",
-                            chats != null ? Arrays.asList(chats) : java.util.Collections.emptyList());
+                            chats != null ? Arrays.asList(chats) : Collections.emptyList());
                 }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error fetching data from backend");
+            String backendMessage = extractBackendMessage(e);
+            if (backendMessage != null) {
+                model.addAttribute("error", backendMessage);
+            }
         }
 
         return "dashboard_yashashvi";
     }
+
     @GetMapping("/dashboard/disha")
     public String dishaDashboard(
             @RequestParam(required = false) Integer id,
@@ -217,7 +264,7 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        model.addAttribute("likesList", java.util.Collections.emptyList());
+        model.addAttribute("likesList", Collections.emptyList());
         model.addAttribute("groupInfo", null);
         model.addAttribute("enteredId", id);
 
@@ -225,12 +272,10 @@ public class DashboardController {
             return "dashboard_disha";
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = getAuthorizedEntity(token);
 
         try {
-            if ("likes".equals(view)) {
+            if ("likes".equalsIgnoreCase(view)) {
                 LikesDTO[] likes = restTemplate.exchange(
                         "http://localhost:8085/api/likes/post/" + id,
                         HttpMethod.GET,
@@ -239,9 +284,9 @@ public class DashboardController {
                 ).getBody();
 
                 model.addAttribute("likesList",
-                        likes != null ? Arrays.asList(likes) : java.util.Collections.emptyList());
+                        likes != null ? Arrays.asList(likes) : Collections.emptyList());
 
-            } else if ("group".equals(view)) {
+            } else if ("group".equalsIgnoreCase(view)) {
                 GroupDTO group = restTemplate.exchange(
                         "http://localhost:8085/api/groups/" + id,
                         HttpMethod.GET,
@@ -254,11 +299,15 @@ public class DashboardController {
 
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error fetching data from backend");
+            String backendMessage = extractBackendMessage(e);
+            if (backendMessage != null) {
+                model.addAttribute("error", backendMessage);
+            }
         }
 
         return "dashboard_disha";
     }
+
     @GetMapping("/dashboard/sakshi")
     public String sakshiDashboard(
             @RequestParam(required = false) String value,
@@ -272,20 +321,18 @@ public class DashboardController {
             return "redirect:/login";
         }
 
-        model.addAttribute("notificationList", java.util.Collections.emptyList());
-        model.addAttribute("searchPosts", java.util.Collections.emptyList());
+        model.addAttribute("notificationList", Collections.emptyList());
+        model.addAttribute("searchPosts", Collections.emptyList());
         model.addAttribute("enteredValue", value);
 
         if (value == null || value.trim().isEmpty()) {
             return "dashboard_sakshi";
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", token);
-        HttpEntity<String> entity = new HttpEntity<>(headers);
+        HttpEntity<String> entity = getAuthorizedEntity(token);
 
         try {
-            if ("notifications".equals(view)) {
+            if ("notifications".equalsIgnoreCase(view)) {
                 NotificationDTO[] notifications = restTemplate.exchange(
                         "http://localhost:8085/api/notifications/" + value,
                         HttpMethod.GET,
@@ -294,27 +341,32 @@ public class DashboardController {
                 ).getBody();
 
                 model.addAttribute("notificationList",
-                        notifications != null ? Arrays.asList(notifications) : java.util.Collections.emptyList());
+                        notifications != null ? Arrays.asList(notifications) : Collections.emptyList());
 
-            } else if ("search".equals(view)) {
+            } else if ("search".equalsIgnoreCase(view)) {
                 PostDto[] posts = restTemplate.exchange(
-                        "http://localhost:8085/api/posts/search?keyword=" + java.net.URLEncoder.encode(value, java.nio.charset.StandardCharsets.UTF_8),
+                        "http://localhost:8085/api/posts/search?keyword=" +
+                                java.net.URLEncoder.encode(value, StandardCharsets.UTF_8),
                         HttpMethod.GET,
                         entity,
                         PostDto[].class
                 ).getBody();
 
                 model.addAttribute("searchPosts",
-                        posts != null ? Arrays.asList(posts) : java.util.Collections.emptyList());
+                        posts != null ? Arrays.asList(posts) : Collections.emptyList());
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error fetching data from backend");
+            String backendMessage = extractBackendMessage(e);
+            if (backendMessage != null) {
+                model.addAttribute("error", backendMessage);
+            }
         }
 
         return "dashboard_sakshi";
     }
+
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
