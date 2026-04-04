@@ -1,7 +1,7 @@
 package com.capg.frontend.controller;
 
+import com.capg.frontend.dto.LoginDTO;
 import jakarta.servlet.http.HttpSession;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
@@ -15,13 +15,11 @@ public class LoginController {
     @Autowired
     private RestTemplate restTemplate;
 
-    // show login page
     @GetMapping("/login")
     public String loginPage() {
         return "login";
     }
 
-    // handle login
     @PostMapping("/login")
     public String login(@RequestParam String username,
                         @RequestParam String password,
@@ -31,24 +29,38 @@ public class LoginController {
         try {
             String url = "http://localhost:8085/account/login";
 
-            // create JSON body
-            String requestBody = "{\"username\":\"" + username + "\", \"password\":\"" + password + "\"}";
+            LoginDTO loginDTO = new LoginDTO();
+            loginDTO.setUsername(username);
+            loginDTO.setPassword(password);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
 
-            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            HttpEntity<LoginDTO> entity = new HttpEntity<>(loginDTO, headers);
 
             ResponseEntity<String> response =
                     restTemplate.postForEntity(url, entity, String.class);
 
             String token = response.getBody();
 
-            // store token in session
+            if (token == null || token.isBlank()) {
+                model.addAttribute("error", "Token not received from backend");
+                return "login";
+            }
+
+            token = token.trim();
+
+            if (token.startsWith("\"") && token.endsWith("\"")) {
+                token = token.substring(1, token.length() - 1);
+            }
+
+            if (token.startsWith("Bearer ")) {
+                token = token.substring(7);
+            }
+
             session.setAttribute("token", token);
             session.setAttribute("username", username);
 
-            // 🔥 REDIRECT BASED ON USER
             switch (username) {
                 case "Bhavya":
                     return "redirect:/dashboard/bhavya";
@@ -65,7 +77,7 @@ public class LoginController {
             }
 
         } catch (Exception e) {
-            e.printStackTrace(); // IMPORTANT
+            e.printStackTrace();
             model.addAttribute("error", "Invalid login");
             return "login";
         }
