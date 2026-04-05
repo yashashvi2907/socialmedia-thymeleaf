@@ -7,14 +7,12 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 @Service
-public class PostService {
+public class UserService {
 
     @Value("${backend.base-url}")
     private String baseUrl;
@@ -29,26 +27,9 @@ public class PostService {
         return new HttpEntity<>(headers);
     }
 
-    public List<PostDTO> getTrending(String token) {
+    public List<PostDTO> getUserPosts(Integer userId, String token) {
 
-        ResponseEntity<PostDTO[]> response = restTemplate.exchange(
-                baseUrl + "/api/posts/trending",
-                HttpMethod.GET,
-                getAuthorizedEntity(token),
-                PostDTO[].class
-        );
-
-        if (response.getBody() == null) {
-            return Collections.emptyList();
-        }
-
-        return Arrays.asList(response.getBody());
-    }
-
-    public List<PostDTO> searchPosts(String keyword, String token) {
-
-        String url = baseUrl + "/api/posts/search?keyword=" +
-                URLEncoder.encode(keyword, StandardCharsets.UTF_8);
+        String url = baseUrl + "/api/posts/user/" + userId;
 
         ResponseEntity<PostDTO[]> response = restTemplate.exchange(
                 url,

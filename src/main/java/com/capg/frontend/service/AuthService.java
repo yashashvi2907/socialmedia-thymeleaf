@@ -1,6 +1,7 @@
 package com.capg.frontend.service;
 
 import com.capg.frontend.dto.LoginDTO;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,8 @@ public class AuthService {
     @Value("${backend.base-url}")
     private String baseUrl;
 
-    private RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    private RestTemplate restTemplate;
 
     public String login(String username, String password) {
 
@@ -31,6 +33,6 @@ public class AuthService {
                 String.class
         );
 
-        return response.getBody(); // returns "Bearer token"
+        return response.getBody();
     }
 }

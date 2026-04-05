@@ -2,7 +2,7 @@ package com.capg.frontend.dto;
 
 import java.time.LocalDateTime;
 
-public class PostDto {
+public class PostDTO {
 
     private Integer postID;
     private String content;
@@ -15,10 +15,10 @@ public class PostDto {
     private int commentCount;
 
     //Constructors
-    public PostDto() {
+    public PostDTO() {
     }
 
-    public PostDto(Integer postID, String content, LocalDateTime timestamp,
+    public PostDTO(Integer postID, String content, LocalDateTime timestamp,
                    Integer userID, String username,
                    int likeCount, int commentCount) {
         this.postID = postID;
