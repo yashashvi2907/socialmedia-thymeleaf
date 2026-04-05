@@ -1,19 +1,17 @@
 package com.capg.frontend.controller;
 
-import com.capg.frontend.dto.LoginDTO;
+import com.capg.frontend.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 
 @Controller
 public class LoginController {
 
     @Autowired
-    private RestTemplate restTemplate;
+    private AuthService authService;
 
     @GetMapping("/login")
     public String loginPage() {
@@ -27,21 +25,7 @@ public class LoginController {
                         Model model) {
 
         try {
-            String url = "http://localhost:8085/account/login";
-
-            LoginDTO loginDTO = new LoginDTO();
-            loginDTO.setUsername(username);
-            loginDTO.setPassword(password);
-
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            HttpEntity<LoginDTO> entity = new HttpEntity<>(loginDTO, headers);
-
-            ResponseEntity<String> response =
-                    restTemplate.postForEntity(url, entity, String.class);
-
-            String token = response.getBody();
+            String token = authService.login(username, password);
 
             if (token == null || token.isBlank()) {
                 model.addAttribute("error", "Token not received from backend");
@@ -54,10 +38,7 @@ public class LoginController {
                 token = token.substring(1, token.length() - 1);
             }
 
-            if (token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-
+            // keep Bearer token as it is
             session.setAttribute("token", token);
             session.setAttribute("username", username);
 

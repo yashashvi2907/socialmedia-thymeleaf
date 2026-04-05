@@ -1,6 +1,6 @@
 package com.capg.frontend.dto;
 
-public class UserDto {
+public class UserDTO {
 
     private Integer userID;
     private String username;

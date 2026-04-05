@@ -1,20 +1,18 @@
 package com.capg.frontend.service;
 
-import com.capg.frontend.dto.PostDTO;
+import com.capg.frontend.dto.NotificationDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 @Service
-public class PostService {
+public class NotificationService {
 
     @Value("${backend.base-url}")
     private String baseUrl;
@@ -29,32 +27,15 @@ public class PostService {
         return new HttpEntity<>(headers);
     }
 
-    public List<PostDTO> getTrending(String token) {
+    public List<NotificationDTO> getNotificationsByUser(String userId, String token) {
 
-        ResponseEntity<PostDTO[]> response = restTemplate.exchange(
-                baseUrl + "/api/posts/trending",
-                HttpMethod.GET,
-                getAuthorizedEntity(token),
-                PostDTO[].class
-        );
+        String url = baseUrl + "/api/notifications/" + userId;
 
-        if (response.getBody() == null) {
-            return Collections.emptyList();
-        }
-
-        return Arrays.asList(response.getBody());
-    }
-
-    public List<PostDTO> searchPosts(String keyword, String token) {
-
-        String url = baseUrl + "/api/posts/search?keyword=" +
-                URLEncoder.encode(keyword, StandardCharsets.UTF_8);
-
-        ResponseEntity<PostDTO[]> response = restTemplate.exchange(
+        ResponseEntity<NotificationDTO[]> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 getAuthorizedEntity(token),
-                PostDTO[].class
+                NotificationDTO[].class
         );
 
         if (response.getBody() == null) {

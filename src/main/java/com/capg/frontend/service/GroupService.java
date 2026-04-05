@@ -1,18 +1,14 @@
 package com.capg.frontend.service;
 
-import com.capg.frontend.dto.PostDTO;
+import com.capg.frontend.dto.GroupDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 @Service
-public class FeedService {
+public class GroupService {
 
     @Value("${backend.base-url}")
     private String baseUrl;
@@ -27,19 +23,17 @@ public class FeedService {
         return new HttpEntity<>(headers);
     }
 
-    public List<PostDTO> getFeed(Integer userId, String token) {
+    public GroupDTO getGroupById(Integer groupId, String token) {
 
-        ResponseEntity<PostDTO[]> response = restTemplate.exchange(
-                baseUrl + "/api/feed/" + userId,
+        String url = baseUrl + "/api/groups/" + groupId;
+
+        ResponseEntity<GroupDTO> response = restTemplate.exchange(
+                url,
                 HttpMethod.GET,
                 getAuthorizedEntity(token),
-                PostDTO[].class
+                GroupDTO.class
         );
 
-        if (response.getBody() == null) {
-            return Collections.emptyList();
-        }
-
-        return Arrays.asList(response.getBody());
+        return response.getBody();
     }
 }
